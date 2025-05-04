@@ -78,13 +78,21 @@ WSGI_APPLICATION = 'questify_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# Default (local development) configuration
 DATABASES = {
-    'default': dj_database_url.config(
-        default='mysql://root:questify619@localhost:3306/questify_db',
-        conn_max_age=600,
-        conn_health_checks=True
-    )
+    'default': {
+        'ENGINE':   'django.db.backends.mysql',
+        'NAME':     'questify_db',
+        'USER':     'root',
+        'PASSWORD': '',
+        'HOST':     'localhost',
+        'PORT':     '3306',
+    }
 }
+
+# Override with JAWSDB_URL in production
+db_from_env = dj_database_url.config(env='JAWSDB_URL', conn_max_age=600)
+DATABASES['default'].update(db_from_env)
 
 
 # Password validation
