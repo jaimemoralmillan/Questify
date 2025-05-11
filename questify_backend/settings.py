@@ -90,9 +90,10 @@ DATABASES = {
     }
 }
 
-# Override with JAWSDB_URL in production
-db_from_env = dj_database_url.config(env='JAWSDB_URL', conn_max_age=600)
-DATABASES['default'].update(db_from_env)
+# Override with DATABASE_URL in production (e.g., on PythonAnywhere or other platforms)
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if DATABASE_URL:
+    DATABASES['default'].update(dj_database_url.config(default=DATABASE_URL, conn_max_age=600, ssl_require=os.environ.get('DJANGO_DB_SSL_REQUIRE', 'False') == 'True'))
 
 
 # Password validation
