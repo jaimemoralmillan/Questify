@@ -13,7 +13,10 @@ class TaskViewSet(viewsets.ModelViewSet):
         for the currently authenticated user.
         """
         user = self.request.user
-        return Task.objects.filter(user=user)
+        if user.is_authenticated:
+            tasks = Task.objects.filter(user=user)
+            return tasks
+        return Task.objects.none()
 
     def perform_create(self, serializer):
         """
