@@ -25,16 +25,22 @@ class TaskViewSet(viewsets.ModelViewSet):
         """
         If the task is being marked as completed, award XP to the user.
         """
-        instance = serializer.instance
-        was_completed = instance.completed # Get current 'completed' status before saving
-        
+        instance = serializer.instance # Task instance before save
+        was_completed = instance.completed
+
+        # Save the updated task instance
         serializer.save() # This updates the instance in place
-        
-        # Check if the 'completed' field was changed from False to True in this update
+
+        # Check if the task was just completed in this update
         if serializer.instance.completed and not was_completed:
+            # Award XP to the user
             user_profile, created = UserProfile.objects.get_or_create(user=self.request.user)
-            # Use the xp_value from the task instance (it's the current value after save)
-            user_profile.total_xp += serializer.instance.xp_value 
+            
+            task_xp_value = serializer.instance.xp_value
+            if task_xp_value is None: # Should not happen if model field has a default
+                task_xp_value = 0
+            
+            user_profile.total_xp += task_xp_value
             user_profile.save()
 
 class UserProfileViewSet(viewsets.ReadOnlyModelViewSet):
