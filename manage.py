@@ -3,9 +3,20 @@
 import os
 import sys
 
+# ---- START DEBUG ----
+# print(f"DEBUG: Python Executable: {sys.executable}")
+# print(f"DEBUG: Python Version: {sys.version}")
+# print("DEBUG: sys.path:")
+# for p in sys.path:
+#     print(f"  {p}")
+# ---- END DEBUG ----
+
+from dotenv import load_dotenv
+
 
 def main():
     """Run administrative tasks."""
+    load_dotenv()  # Load .env file before accessing settings
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'questify_backend.settings')
     try:
         from django.core.management import execute_from_command_line
