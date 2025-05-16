@@ -60,8 +60,10 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8100", # Puerto por defecto de Ionic serve
+    "http://localhost:8101", # Nuevo puerto de Ionic serve
     "http://localhost:8080", # Otro puerto común para Vue dev server
     "http://127.0.0.1:8100",
+    "http://127.0.0.1:8101", # Nuevo puerto de Ionic serve (IP)
 ]
 
 ROOT_URLCONF = 'questify_backend.urls'

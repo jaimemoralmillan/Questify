@@ -4,6 +4,7 @@ from django.contrib.auth.models import User # Import User model
 class Task(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tasks') # Link to User
     title = models.CharField(max_length=100)
+    description = models.TextField(blank=True, null=True)  # Field added to Task model
     completed = models.BooleanField(default=False)
     xp_value = models.IntegerField(default=10) # XP awarded for completing the task
 
