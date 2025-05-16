@@ -64,7 +64,16 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8080", # Otro puerto común para Vue dev server
     "http://127.0.0.1:8100",
     "http://127.0.0.1:8101", # Nuevo puerto de Ionic serve (IP)
+    "https://questify-front-end.vercel.app", # Vercel deployment URL
 ]
+
+# If you want to be more flexible, especially if Vercel might use preview URLs:
+# CORS_ALLOW_CREDENTIALS = True # If you need to send cookies/auth headers from frontend
+# CORS_ALLOWED_ORIGIN_REGEXES = [
+# r"^https://.*\.vercel\.app$", # Allows all vercel.app subdomains
+# r"^http://localhost:\d{4}$",
+# r"^http://127\.0\.0\.1:\d{4}$",
+# ]
 
 ROOT_URLCONF = 'questify_backend.urls'
 
