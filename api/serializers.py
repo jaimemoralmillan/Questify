@@ -1,12 +1,47 @@
 import math
+from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
-from django.contrib.auth.models import User # Import User model
-from .models import Task, UserProfile # Import UserProfile
+from .models import Task, UserProfile, Achievement, UserAchievement # Import Achievement and UserAchievement
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username']
+
+# --- Achievement Serializer ---
+class AchievementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Achievement
+        fields = ['name', 'description', 'icon', 'xp_reward']
+
+class UserCreateSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    password2 = serializers.CharField(write_only=True, required=True, label="Confirm password")
+
+    class Meta:
+        model = User
+        fields = ('username', 'password', 'password2') # Removed email, first_name, last_name
+
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password2']:
+            raise serializers.ValidationError({"password": "Password fields didn't match."})
+        # No longer need to validate email if it's not a user input
+        return attrs
+
+    def create(self, validated_data):
+        # Generate a dummy email as the User model requires it.
+        # This email won't be used for any practical purpose in this simplified registration.
+        dummy_email = f"{validated_data['username']}@example.com"
+
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email=dummy_email, # Use dummy email
+            # first_name and last_name are not provided
+        )
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
 
 class UserProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True) # Nested UserSerializer
@@ -15,6 +50,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     xp_for_next_level = serializers.SerializerMethodField()
     xp_progress_in_current_level = serializers.SerializerMethodField()
     xp_needed_for_level_up = serializers.SerializerMethodField()
+    unlocked_achievements = serializers.SerializerMethodField() # Add this line
 
     class Meta:
         model = UserProfile
@@ -26,7 +62,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'xp_at_current_level_start',
             'xp_for_next_level',
             'xp_progress_in_current_level',
-            'xp_needed_for_level_up'
+            'xp_needed_for_level_up',
+            'unlocked_achievements'  # Add this line
         ] # Added XP progress fields
 
     def get_level(self, obj):
@@ -48,6 +85,13 @@ class UserProfileSerializer(serializers.ModelSerializer):
         # Assuming each level requires 100 XP
         return 100
 
+    def get_unlocked_achievements(self, obj):
+        # Assuming obj is a UserProfile instance
+        # We access the related UserAchievement instances through the UserProfile model's M2M field 'unlocked_achievements'
+        # which refers to the Achievement model directly.
+        achievements = obj.unlocked_achievements.all() # This gets all Achievement instances linked to the UserProfile
+        return AchievementSerializer(achievements, many=True).data
+
 class TaskSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(read_only=True) # User will be set in the view
     # Alternatively, to show more user detail (read-only):
@@ -57,4 +101,4 @@ class TaskSerializer(serializers.ModelSerializer):
         model  = Task
         fields = ['id', 'user', 'title', 'description', 'completed', 'xp_value']
         # To make user field writable if you were not setting it in view:
-        # read_only_fields = ('user',)
+        # read_only_fields = ('user',')
