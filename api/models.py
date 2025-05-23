@@ -7,6 +7,18 @@ class Task(models.Model):
     description = models.TextField(blank=True, null=True)  # Field added to Task model
     completed = models.BooleanField(default=False)
     xp_value = models.IntegerField(default=10) # XP awarded for completing the task
+    duration = models.IntegerField(default=0, help_text="Duration in minutes") # New field for duration
+    DIFFICULTY_CHOICES = [
+        ('EASY', 'Easy'),
+        ('NORMAL', 'Normal'),
+        ('HARD', 'Hard'),
+    ]
+    difficulty = models.CharField(
+        max_length=10,
+        choices=DIFFICULTY_CHOICES,
+        default='NORMAL',
+        help_text="Difficulty level of the task"
+    ) # New field for difficulty
 
     def __str__(self):
         return self.title
@@ -40,6 +52,8 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     total_xp = models.IntegerField(default=0)
     unlocked_achievements = models.ManyToManyField(Achievement, through='UserAchievement', related_name='achieved_by')
+    selected_theme_id = models.CharField(max_length=255, null=True, blank=True) # Added for theme persistence
+    selected_avatar_id = models.CharField(max_length=255, null=True, blank=True) # Added for avatar persistence
 
     def __str__(self):
         return f'{self.user.username}\'s Profile'

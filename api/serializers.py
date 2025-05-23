@@ -63,7 +63,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'xp_for_next_level',
             'xp_progress_in_current_level',
             'xp_needed_for_level_up',
-            'unlocked_achievements'  # Add this line
+            'unlocked_achievements',  # Add this line
+            'selected_theme_id', # Add this line for the selected theme
+            'selected_avatar_id' # Add this line for the selected avatar
         ] # Added XP progress fields
 
     def get_level(self, obj):
@@ -98,7 +100,10 @@ class TaskSerializer(serializers.ModelSerializer):
     # user = UserSerializer(read_only=True)
 
     class Meta:
-        model  = Task
-        fields = ['id', 'user', 'title', 'description', 'completed', 'xp_value']
-        # To make user field writable if you were not setting it in view:
-        # read_only_fields = ('user',')
+        model = Task
+        fields = ['id', 'user', 'title', 'description', 'completed', 'xp_value', 'duration', 'difficulty']
+        read_only_fields = ['user'] # User is set based on the authenticated request user
+
+    def create(self, validated_data):
+        # user will be added in the view based on request.user
+        return Task.objects.create(**validated_data)

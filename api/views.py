@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from rest_framework import viewsets, permissions, status # Import status
+from rest_framework import viewsets, permissions, status, mixins # Import status and mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response # Import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -136,9 +136,9 @@ class TaskViewSet(viewsets.ModelViewSet):
         serializer.save()
 
 
-class UserProfileViewSet(viewsets.ReadOnlyModelViewSet):
+class UserProfileViewSet(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin):
     """
-    API endpoint that allows users to be viewed.
+    API endpoint that allows users to be viewed and updated.
     """
     serializer_class = UserProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -149,3 +149,35 @@ class UserProfileViewSet(viewsets.ReadOnlyModelViewSet):
         """
         user = self.request.user
         return UserProfile.objects.filter(user=user)
+
+    @action(detail=False, methods=['patch'], url_path='update-profile')
+    def update_profile(self, request):
+        user_profile = get_object_or_404(UserProfile, user=request.user)
+        data = {}
+        if 'selected_theme_id' in request.data:
+            data['selected_theme_id'] = request.data['selected_theme_id']
+        if 'selected_avatar_id' in request.data:
+            data['selected_avatar_id'] = request.data['selected_avatar_id']
+        
+        if not data: # If neither theme nor avatar id is provided
+            return Response({'error': 'No data provided for update.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = UserProfileSerializer(user_profile, data=data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AchievementViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Achievement.objects.all()
+    serializer_class = AchievementSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    @action(detail=False, methods=['get'], url_path='my-achievements')
+    def my_achievements(self, request):
+        user_profile = get_object_or_404(UserProfile, user=request.user)
+        # Access through the related_name 'unlocked_achievements' from UserProfile model
+        achievements = user_profile.unlocked_achievements.all()
+        serializer = AchievementSerializer(achievements, many=True)
+        return Response(serializer.data)
